@@ -124,22 +124,12 @@ It's worth looking at how variables in the data set relate to one another.
 ## Difference in Wage & Difference in Bonus
 
 ```{r, echo = FALSE, results = 'hide', warning = FALSE}
-ggplot(uniGPG, aes(x = DiffMeanHourlyPercent, y = DiffMeanBonusPercent)) +
+ggplot(uniGPG, aes(x = DiffMeanHourlyPercent, y = DiffMeanBonusPercent, color = EmployerSize)) +
     geom_point() + 
-    stat_smooth(method = "lm", col = "magenta") + 
+    stat_smooth(col = "magenta") + 
     ylim(-150,200) +
-    labs(x = "Difference in mean hourly wage (%)", y = "Differnce in mean bonus (%)")
+    labs(x = "Difference in mean hourly wage (%)", y = "Differnce in mean bonus (%)",
+    caption = "Trend showing how in extreme cases, difference in wage doesn't corrolate with a difference in bonus.")
 ```
 
-In a plot of wage vs bonus for any given company, one would expect an increasing line of best fit, since higher paid employees would be given higher bonuses due to increased importance within the business. In the above plot, we see that the line of best fit only has a gradual increase. The numerical details for the above linear model can be found in the table below.
-
-```{r, echo = FALSE}
-lm(DiffMeanBonusPercent ~ DiffMeanHourlyPercent, data = uniGPG) %>% 
-    tidy() %>% 
-    kable(
-        caption = "Table of coefficients for the model fitted between the difference in hourly wage and bonus",
-        col.names = c("Predictor", "B", "Std. Error", "t", "p"),
-        digits = c(0, 2, 3, 2, 3)
-    )
-```
-
+In a plot of wage vs bonus for any given company, one would expect an increasing line of best fit, since higher paid employees would be given higher bonuses due to increased importance within the business. What we see here is that actually up until an hourly wage difference of around 14%, there is minimal difference in bonus difference, which then increases gradually before coming back down at extreme wage differences.
