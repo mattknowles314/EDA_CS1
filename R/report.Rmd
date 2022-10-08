@@ -12,13 +12,16 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-setwd("/home/matthew/Documents/EDA_CS1")
+setwd("/Users/matthew/Documents/EDA_CS1")
 library(ggplot2)
 library(dplyr)
 library(mice)
+
 library(Hmisc)
 library(knitr)
 library(kableExtra)
+library(leaflet)
+library(stringr)
 
 # Load Data
 GPG1718 <- read.csv(file = "data/GPG1718.csv")
@@ -27,6 +30,7 @@ GPG1920 <- read.csv(file = "data/GPG1920.csv")
 GPG2021 <- read.csv(file = "data/GPG2021.csv")
 GPG2122 <- read.csv(file = "data/GPG2122.csv")
 unis <- read.csv("data/universities.csv")
+postcodes <- read.csv("data/postcode.csv")
 
 # Add a year coolumn to each data
 GPG1718$year <- 2017
@@ -55,17 +59,15 @@ plot(uni_year_count_density)
 
 Here, we will take a look at the Gender Pay Gap in the UK. Specifically, in UK universities.
 
-# Data Overview
+# Missing Data
 
-## Missing Data
+It's useful to see which variables had missing data. The following plot shows the pattern of the data.
 
-Missing data is a common problem in data analysis. 
-
-```{r, echo = FALSE, results = 'hide'}
-md.pattern(uniGPG, rotate.names = TRUE)
+```{r}
+X <- md.pattern(uniGPG, rotate.names = TRUE)
 ```
 
-We see that the two missing datapoints are the difference in mean and median bonus percent.
+We can see that of the 428 rows of data, 78 had missing values. Those 78 values were both missing the DiffMeanBonusPercent and DiffMedianBonusPercent values. 
 
 ```{r, echo = FALSE}
 uniGPG <- na.omit(uniGPG)
@@ -133,3 +135,30 @@ ggplot(uniGPG, aes(x = DiffMeanHourlyPercent, y = DiffMeanBonusPercent, color = 
 ```
 
 In a plot of wage vs bonus for any given company, one would expect an increasing line of best fit, since higher paid employees would be given higher bonuses due to increased importance within the business. What we see here is that actually up until an hourly wage difference of around 14%, there is minimal difference in bonus difference, which then increases gradually before coming back down at extreme wage differences.
+
+# Regional Variations
+
+In the below interactive map, the dots represent universities in the data set. The darker the colour of the dot, the higher the average difference in hourly wage in the last five years. 
+
+```{r, echo = FALSE, results = 'hide', warning = 'hide'}
+X <- uniGPG %>%
+    group_by(EmployerName) %>%
+    summarise(Town = str_replace(PostCode, "(?s) .*", ""),
+              avg_hourDiff = mean(DiffMeanHourlyPercent), .groups = 'drop')
+Y <- unique(X)
+Y$weighting <- Y$avg_hourDiff/sum(Y$avg_hourDiff)
+names(postcodes) <- c("id", "Town", "latitude", "longitude")
+Z <- merge(Y, postcodes, by = "Town")
+```
+
+```{r, echo = FALSE}
+leaflet() %>%
+    setView(lng = -1.47, lat = 55, zoom = 5) %>%
+    addProviderTiles(providers$Esri.WorldGrayCanvas) %>% 
+    addCircles(lat = Z$latitude,
+               lng = Z$longitude,
+               opacity = Z$weighting * 100,
+               color = "magenta")
+```
+
+Interestingly, there seems to be no geographical pattern in the Gender Pay Gap- it is a nationwide phenomenon. Other than a few universities in the Midlands, and a couple in the North, the isn't much variation. 

@@ -1,5 +1,8 @@
 library(dplyr)
 library(tidyr)
+library(rgdal)
+library(sp)
+library(leaflet)
 
 # Which unis reported for all years
 uniGPG <- GPG %>%
@@ -43,4 +46,24 @@ ggplot(uniGPG, aes(x = DiffMeanHourlyPercent, y = DiffMeanBonusPercent)) +
     stat_smooth(method = "lm", col = "magenta") +
     ylim(-150,200)
 
+# Some more testing
 
+A <- uniGPG %>%
+    group_by(EmployerName) %>%
+    summarise(avg_hourDiff = mean(DiffMeanHourlyPercent),
+              avf_bonusDiff = mean(DiffMeanBonusPercent))
+
+# Postcodes
+X <- uniGPG %>%
+    group_by(EmployerName) %>%
+    summarise(Town = str_replace(PostCode, "(?s) .*", ""))
+Y <- unique(X)
+
+names(postcodes) <- c("id", "Town", "latitude", "longitude")
+Z <- merge(Y, postcodes, by = "Town")
+
+leaflet() %>%
+    setView(lng = -1.47, lat = 55, zoom = 5) %>%
+    addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
+    addCircles(lat = Z$latitude,
+               lng = Z$longitude)

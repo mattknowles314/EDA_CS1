@@ -5,6 +5,7 @@ GPG1920 <- read.csv(file = "data/GPG1920.csv")
 GPG2021 <- read.csv(file = "data/GPG2021.csv")
 GPG2122 <- read.csv(file = "data/GPG2122.csv")
 unis <- read.csv("data/universities.csv")
+postcodes <- read.csv("data/postcode.csv")
 
 # Add a year coolumn to each data
 GPG1718$year <- 2017
