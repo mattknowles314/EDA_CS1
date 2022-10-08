@@ -29,3 +29,7 @@ bonus_diff_dens_2020 <- getDens(uniGPG, year = 2020)
 bonus_diff_dens_2021 <- getDens(uniGPG, year = 2021)
 bonus_diff_dens_2022 <- getDens(uniGPG, year = 2022)
 
+# Stacked density plots
+
+ggplot(uniGPG, aes(x = DiffMeanHourlyPercent, fill = year)) +
+    geom_density(position = "stack")
