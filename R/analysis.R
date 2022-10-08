@@ -33,3 +33,14 @@ bonus_diff_dens_2022 <- getDens(uniGPG, year = 2022)
 
 ggplot(uniGPG, aes(x = DiffMeanHourlyPercent, fill = year)) +
     geom_density(position = "stack")
+
+# How does size relate to differences
+
+X <- as.matrix(select(uniGPG, DiffMeanHourlyPercent, DiffMeanBonusPercent, EmployerSize))
+
+ggplot(uniGPG, aes(x = DiffMeanHourlyPercent, y = DiffMeanBonusPercent)) +
+    geom_point() +
+    stat_smooth(method = "lm", col = "magenta") +
+    ylim(-150,200)
+
+

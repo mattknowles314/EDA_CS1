@@ -12,10 +12,13 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-setwd("/Users/matthew/Documents/EDA_CS1")
+setwd("/home/matthew/Documents/EDA_CS1")
 library(ggplot2)
 library(dplyr)
 library(mice)
+library(Hmisc)
+library(knitr)
+library(kableExtra)
 
 # Load Data
 GPG1718 <- read.csv(file = "data/GPG1718.csv")
@@ -68,26 +71,75 @@ We see that the two missing datapoints are the difference in mean and median bon
 uniGPG <- na.omit(uniGPG)
 ```
 
+```{r, echo = FALSE}
+gg0 <- list()
+gg0[[1]] <- ggplot(uniGPG, aes(x = DiffMeanHourlyPercent)) +
+    geom_density(data = filter(uniGPG, year == 2017), color = "#19234d", show.legend = TRUE) +
+    geom_density(data = filter(uniGPG, year == 2018), color = "#2d3d86", show.legend = TRUE) + 
+    geom_density(data = filter(uniGPG, year == 2019), color = "#4057bf", show.legend = TRUE) + 
+    geom_density(data = filter(uniGPG, year == 2020), color = "#7989d2", show.legend = TRUE) + 
+    geom_density(data = filter(uniGPG, year == 2021), color = "magenta", show.legend = TRUE) +
+    labs(x = "Difference in mean hourly wage (%)", y = "Density", 
+         caption = "The density of difference in mean hourly wage (as a percentage) has not seen a change in pattern over 5 years")
+gg0[[2]] <- ggplot(uniGPG, aes(x = DiffMeanBonusPercent)) +
+    geom_density(data = filter(uniGPG, year == 2017), color = "#19234d", show.legend = TRUE) +
+    geom_density(data = filter(uniGPG, year == 2018), color = "#2d3d86", show.legend = TRUE) + 
+    geom_density(data = filter(uniGPG, year == 2019), color = "#4057bf", show.legend = TRUE) + 
+    geom_density(data = filter(uniGPG, year == 2020), color = "#7989d2", show.legend = TRUE) + 
+    geom_density(data = filter(uniGPG, year == 2021), color = "magenta", show.legend = TRUE) +
+    labs(x = "Difference in mean bonus (%)", y = "Density", 
+         caption = "The density of difference in mean bonus has shifted away from 0 in recent years")
+
+headings <- c("Density of Hourly Wage Differences", "Density of Bonus Differences")
+```
+
 # Densities
 
 We first look at how a few variables are distributed. First, the average hourly wage difference as a percentage. The way this is presented shows older data in a darker colour, with the magenta line being the most recent full year of data. This is done to highlight how the denisty has changed over time up to the most recent year.
 
+Ideally, we would expect the curves to be centered around 0. The Gender Pay Gap is a well documented phenomenom in Economics, so we know beforehand that the curves will not be centered around 0, but what would be ideal is to see the lighter curves moving closer to 0, which would show companies addressing the Gender Pay Gap in recent years.
+
+We can see that actually see that the darker curves were closer to 0, and then the lighter curves moved over towards an almost 20% difference in hourly wage. What is encouraging is how the magenta curve (the curve from the most recent data) has moved drastically over to the left.
+
+What about bonuses? Ideally, again, we would ideally see curves around 0, but since this will likely not be the case, we would at least like to see the lighter curves moving towards 0. 
+
+Unfortunately, what we see is that the curves have actually moved over the right, suggesting that in recent years the Gender Pay Gap has increased in terms of average bonus.
+
+Select a tab to view the plot.
+
+## Density Plots {.tabset}
+```{r, results = "asis", echo = FALSE}
+for (i in 1:length(gg0)) {
+    cat("### ",headings[i],"\n")
+    print(gg0[[i]])
+    cat('\n\n')
+}
+## {-}
+```
+
+# Relationships
+
+It's worth looking at how variables in the data set relate to one another. 
+
+## Difference in Wage & Difference in Bonus
+
+```{r, echo = FALSE, results = 'hide', warning = FALSE}
+ggplot(uniGPG, aes(x = DiffMeanHourlyPercent, y = DiffMeanBonusPercent)) +
+    geom_point() + 
+    stat_smooth(method = "lm", col = "magenta") + 
+    ylim(-150,200) +
+    labs(x = "Difference in mean hourly wage (%)", y = "Differnce in mean bonus (%)")
+```
+
+In a plot of wage vs bonus for any given company, one would expect an increasing line of best fit, since higher paid employees would be given higher bonuses due to increased importance within the business. In the above plot, we see that the line of best fit only has a gradual increase. The numerical details for the above linear model can be found in the table below.
+
 ```{r, echo = FALSE}
-ggplot(uniGPG, aes(x = DiffMeanHourlyPercent)) +
-    geom_density(data = filter(uniGPG, year == 2017), color = "#19234d", show.legend = TRUE) +
-    geom_density(data = filter(uniGPG, year == 2018), color = "#2d3d86", show.legend = TRUE) + 
-    geom_density(data = filter(uniGPG, year == 2019), color = "#4057bf", show.legend = TRUE) + 
-    geom_density(data = filter(uniGPG, year == 2020), color = "#7989d2", show.legend = TRUE) + 
-    geom_density(data = filter(uniGPG, year == 2021), color = "magenta", show.legend = TRUE)
+lm(DiffMeanBonusPercent ~ DiffMeanHourlyPercent, data = uniGPG) %>% 
+    tidy() %>% 
+    kable(
+        caption = "Table of coefficients for the model fitted between the difference in hourly wage and bonus",
+        col.names = c("Predictor", "B", "Std. Error", "t", "p"),
+        digits = c(0, 2, 3, 2, 3)
+    )
 ```
 
-What about bonuses?
-
-```{r, echo = FALSE }
-ggplot(uniGPG, aes(x = DiffMeanBonusPercent)) +
-    geom_density(data = filter(uniGPG, year == 2017), color = "#19234d", show.legend = TRUE) +
-    geom_density(data = filter(uniGPG, year == 2018), color = "#2d3d86", show.legend = TRUE) + 
-    geom_density(data = filter(uniGPG, year == 2019), color = "#4057bf", show.legend = TRUE) + 
-    geom_density(data = filter(uniGPG, year == 2020), color = "#7989d2", show.legend = TRUE) + 
-    geom_density(data = filter(uniGPG, year == 2021), color = "magenta", show.legend = TRUE)
-```
