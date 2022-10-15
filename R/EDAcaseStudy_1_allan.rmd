@@ -1,0 +1,93 @@
+---
+title: "EDA Case Study 1"
+author: "G7 - Allan Cousins"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+# Task 1 (Data Loading and Manipulation)
+```{r, echo = FALSE, include = FALSE}
+# load required packages
+library(tidyverse)
+library(stringr)
+library(plyr)
+
+# load data from working directory (make sure it is same as this file + data)
+y1718 <- read_csv("UK Gender Pay Gap Data - 2017 to 2018.csv")
+y1819 <- read_csv("UK Gender Pay Gap Data - 2018 to 2019.csv")
+y1920 <- read_csv("UK Gender Pay Gap Data - 2019 to 2020.csv")
+y2021 <- read_csv("UK Gender Pay Gap Data - 2020 to 2021.csv")
+y2122 <- read_csv("UK Gender Pay Gap Data - 2021 to 2022.csv")
+
+#add year column to keep track of year in which it was filed
+for(i in 0:4)
+{
+  y_start <- 17 + i
+  y_end <- y_start + 1
+  year <- paste(y_start,y_end,sep="")
+  year_string <- paste("y",year,sep="")
+  assign(year_string,cbind(get(year_string),rep(year,nrow(get(year_string)))))
+}
+
+# combine to a single dataframe and clean up final column name
+df <- rbind(y1718,y1819,y1920,y2021,y2122)
+colnames(df)[ncol(df)] <- "year_filed"
+
+# load given university data
+uni <- read_csv("universities.csv")
+
+# partition data to universities only and add pre/post 92 column
+# too lazy to find a vectorized solution so doing a loop to add pre/post-92 data
+df_uni <- df[is.element(df$EmployerId,uni$EmployerId),]
+
+pre92 <- rep("xx",nrow(df_uni))
+for (i in 1:nrow(df_uni))
+{
+  pre92[i] <- uni$pre92[which(uni$EmployerId==df_uni$EmployerId[i])]
+}
+
+df_uni <- cbind(df_uni,pre92)
+colnames(df_uni)[ncol(df_uni)] <- "pre92"
+
+```
+
+# Task 2: Produce a contingency table of the university data for pre-92 and post-92
+```{r, echo = FALSE, message=FALSE}
+# loop through years and tabulate number of universities pre/post 92 that have submitted data
+pre92_submitted <- c()
+post92_submitted <- c()
+
+for(i in 0:4)
+{
+  y_start <- 17 + i
+  y_end <- y_start + 1
+  year <- paste(y_start,y_end,sep="")
+  
+  total_submitted <- which(df_uni$year_filed==year)
+  pre92_submitted[i+1] <-  as.numeric(count(df_uni$pre92[total_submitted])[2,2])
+  post92_submitted[i+1] <-  as.numeric(count(df_uni$pre92[total_submitted])[1,2])
+}
+
+ctable_92 <- rbind(pre92_submitted,post92_submitted)
+colnames(ctable_92) <- c("1718","1819","1920","2021","2122")
+print(ctable_92)
+
+```
+
+# Task 3: Investigate number of universities that have provided data every year
+```{r, echo = FALSE, message=FALSE}
+# fairly easy since there are 5 years of data. Just need to check if each unique employer ID is inputted 5 times
+count <- 0
+for (i in 1:nrow(uni))
+{
+  if(length(which(df_uni$EmployerId==uni$EmployerId[i]))==5)
+  {
+   count <- count + 1 
+  }
+}
+
+print(paste("The number of universities that have submitted every year is: ",count,sep=""))
+print(paste("And the total number of universities across all years is: ",nrow(uni), sep=""))
+
+```

@@ -67,3 +67,6 @@ leaflet() %>%
     addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
     addCircles(lat = Z$latitude,
                lng = Z$longitude)
+
+ggplot(uniGPG, aes(x = DiffMedianHourlyPercent, y = year, group = year, fill = year)) +
+    geom_density_ridges()
