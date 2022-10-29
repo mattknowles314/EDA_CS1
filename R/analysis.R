@@ -70,3 +70,5 @@ leaflet() %>%
 
 ggplot(uniGPG, aes(x = DiffMedianHourlyPercent, y = year, group = year, fill = year)) +
     geom_density_ridges()
+
+A <- merge(uniGPG, unis, by = "EmployerName")

@@ -50,10 +50,6 @@ uniGPG <- GPG %>%
 # Get the count of reporting
 uni_year_count <- uniGPG %>%
     count(EmployerName)
-
-# Plot the density of reporting frequency
-uni_year_count_density <- density(uni_year_count$n)
-plot(uni_year_count_density)
 ```
 
 # Introduction
@@ -153,3 +149,4 @@ leaflet() %>%
 ```
 
 Interestingly, there seems to be no geographical pattern in the Gender Pay Gap- it is a nationwide phenomenon. Other than a few universities in the Midlands, and a couple in the North, the isn't much variation. 
+
